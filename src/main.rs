@@ -1,33 +1,69 @@
-use slint::Timer;
-use std::io;
+use std::io::{stdin, stdout, Write};
+use termion::event::Key;
+use termion::input::TermRead;
+use termion::raw::IntoRawMode;
 
-fn my_callback(prompt: &str, input: &mut String) {
-  if prompt != input {
-    println!("You failed");
-    println!("You typed {}", input);
-  } 
-}
+fn main() {
+    let stdin = stdin();
+    let mut stdout = stdout().into_raw_mode().unwrap();
 
-fn main()
-{
-  let test_text = "fish should fine by duck mode\n";
+    write!(
+        stdout,
+        "{}{}q to exit. Type stuff, use alt, and so on.{}",
+        termion::clear::All,
+        termion::cursor::Goto(1, 1),
+        termion::cursor::Hide
+    )
+    .unwrap();
+    stdout.flush().unwrap();
 
-  println!("Start typing when you're ready");
+    let mut cursor_x = 1;
+    let mut cursor_y = 1;
+    let mut buffer: String = "".to_owned();
 
-  println!("\n{}", test_text);
+    for k in stdin.keys() {
+        write!(
+            stdout,
+            "{}",
+            termion::cursor::Goto(cursor_x, cursor_y)
+            //termion::clear::CurrentLine
+        )
+        .unwrap();
 
-  let mut test_input = String::new(); 
+        match k.as_ref().unwrap() {
+            Key::Char('q') => break,
+            Key::Char('-') => println!("{buffer}"),
+            Key::Char(c) => println!("{}", c),
+            Key::Alt(c) => println!("^{}", c),
+            Key::Ctrl(c) => println!("*{}", c),
+            Key::Esc => println!("ESC"),
+            Key::Left => println!("←"),
+            Key::Right => println!("→"),
+            Key::Up => println!("↑"),
+            Key::Down => println!("↓"),
+            Key::Backspace => println!("×"),
+            _ => {
+                println!("{:?}", k)
+            }
+        }
 
-  Timer::single_shot(std::time::Duration::from_secs(5), move || {
-    println!("Test complete.");
-    slint::quit_event_loop();
-  });
+        match k.unwrap() {
+          Key::Char(k) => buffer.push(k),
+          _ => {}
+        }
 
-  io::stdin().read_line(&mut test_input);
+        // Increment cursor but stop on second line
+        if cursor_x > 80 && cursor_y < 2 {
+          cursor_x = 1;
+          cursor_y = 2;
+        } else if cursor_x > 80 {
+          cursor_x = 1;
+        } else {
+          cursor_x += 1;
+        }
 
-  //println!("WPM: N/A");
-  slint::run_event_loop_until_quit();
-  if &mut test_input != test_text {
-    println!("You failed the test.");
-  }
+        stdout.flush().unwrap();
+    }
+
+    write!(stdout, "{}", termion::cursor::Show).unwrap();
 }
