@@ -9,30 +9,21 @@ fn main() {
     let mut stdout = stdout().into_raw_mode().unwrap();
 
     let stdin = stdin();
-    let mut start_row = 3;
+    let start_row = 3;
     let mut cursor_x = 1;
     let mut cursor_y = start_row;
     let mut buffer: String = "".to_owned();
-    let test_text = "kitty type";
+    let mut prompt = "kitty type".chars();
+    let prompt_len = prompt.as_str().len();
+    let mut misses = 0;
 
-    write!(
-        stdout,
-        "{}{}{}{}",
-        termion::clear::All,
-        termion::cursor::Goto(1, 1),
-        test_text,
-        termion::cursor::Hide
-        //termion::clear::CurrentLine
-    )
-    .unwrap();
-    stdout.flush().unwrap();
+    print_prompt(&mut stdout, prompt.as_str());
 
     for k in stdin.keys() {
         write!(
             stdout,
             "{}",
             termion::cursor::Goto(cursor_x, cursor_y)
-            //termion::clear::CurrentLine
         )
         .unwrap();
 
@@ -48,17 +39,24 @@ fn main() {
             }
         }
 
+        if *k.as_ref().unwrap() != Key::Char(prompt.nth(0).unwrap()) {
+            misses += 1;
+        }
+
+
         match k.unwrap() {
             Key::Char(k) => buffer.push(k),
             _ => {}
         }
 
-        if buffer == test_text {
+        if buffer.len() == prompt_len {
             write!(
                 stdout,
-                "{}{}",
-                "You done",
-                termion::cursor::Goto(1, cursor_y+1)
+                "{}{}{}{}",
+                termion::cursor::Goto(1, cursor_y+1),
+                "You done, mistakes: ",
+                misses.to_string(),
+                termion::cursor::Goto(1, cursor_y+2)
             )
             .unwrap();
             stdout.flush().unwrap();
@@ -79,4 +77,18 @@ fn main() {
     }
 
     write!(stdout, "{}", termion::cursor::Show).unwrap();
+}
+
+
+fn print_prompt(stdout: &mut std::io::Stdout, prompt: &str) {
+    write!(
+        stdout,
+        "{}{}{}{}",
+        termion::clear::All,
+        termion::cursor::Goto(1, 1),
+        prompt,
+        termion::cursor::Hide
+    )
+    .unwrap();
+    stdout.flush().unwrap();
 }
