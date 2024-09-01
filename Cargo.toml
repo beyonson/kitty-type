@@ -4,4 +4,4 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-slint = "1.7.2"
+termion = "4.0.2"
