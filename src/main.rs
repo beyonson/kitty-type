@@ -4,18 +4,9 @@ use termion::input::TermRead;
 use termion::raw::IntoRawMode;
 
 fn main() {
+    // Declare stdio
     let stdin = stdin();
     let mut stdout = stdout().into_raw_mode().unwrap();
-
-    write!(
-        stdout,
-        "{}{}q to exit. Type stuff, use alt, and so on.{}",
-        termion::clear::All,
-        termion::cursor::Goto(1, 1),
-        termion::cursor::Hide
-    )
-    .unwrap();
-    stdout.flush().unwrap();
 
     let mut cursor_x = 1;
     let mut cursor_y = 1;
@@ -43,18 +34,18 @@ fn main() {
         }
 
         match k.unwrap() {
-          Key::Char(k) => buffer.push(k),
-          _ => {}
+            Key::Char(k) => buffer.push(k),
+            _ => {}
         }
 
         // Increment cursor but stop on second line
         if cursor_x > 80 && cursor_y < 2 {
-          cursor_x = 1;
-          cursor_y = 2;
+            cursor_x = 1;
+            cursor_y = 2;
         } else if cursor_x > 80 {
-          cursor_x = 1;
+            cursor_x = 1;
         } else {
-          cursor_x += 1;
+            cursor_x += 1;
         }
 
         stdout.flush().unwrap();
