@@ -1,13 +1,12 @@
 use std::io::{stdin, stdout, Write};
 use termion::event::Key;
 use termion::input::TermRead;
+use termion::color;
 use termion::raw::IntoRawMode;
 
 
 fn main() {
-    // Declare stdio
     let mut stdout = stdout().into_raw_mode().unwrap();
-
     let stdin = stdin();
     let start_row = 3;
     let mut cursor_x = 1;
@@ -20,12 +19,15 @@ fn main() {
     print_prompt(&mut stdout, prompt.as_str());
 
     for k in stdin.keys() {
-        write!(
-            stdout,
-            "{}",
-            termion::cursor::Goto(cursor_x, cursor_y)
-        )
-        .unwrap();
+        write!(stdout, "{}", termion::cursor::Goto(cursor_x, cursor_y)).unwrap();
+
+        // Count mistypes
+        if *k.as_ref().unwrap() != Key::Char(prompt.nth(0).unwrap()) {
+            write!(stdout, "{}", termion::color::Fg(color::Red)).unwrap();
+            misses += 1;
+        } else {
+            write!(stdout, "{}", termion::color::Fg(color::Black)).unwrap();
+        }
 
         match k.as_ref().unwrap() {
             Key::Char('q') => break,
@@ -34,21 +36,16 @@ fn main() {
             Key::Alt(c) => println!("^{}", c),
             Key::Ctrl(c) => println!("*{}", c),
             Key::Backspace => println!("×"),
-            _ => {
-                println!("{:?}", k)
-            }
+            _ => {}
         }
 
-        if *k.as_ref().unwrap() != Key::Char(prompt.nth(0).unwrap()) {
-            misses += 1;
-        }
-
-
+        // Push input key to input buffer
         match k.unwrap() {
             Key::Char(k) => buffer.push(k),
             _ => {}
         }
-
+        
+        // End condition
         if buffer.len() == prompt_len {
             write!(
                 stdout,
@@ -73,10 +70,17 @@ fn main() {
             cursor_x += 1;
         }
 
+
         stdout.flush().unwrap();
     }
 
-    write!(stdout, "{}", termion::cursor::Show).unwrap();
+    write!(
+        stdout,
+        "{}{}",
+        termion::color::Fg(color::Reset),
+        termion::cursor::Show
+    )
+    .unwrap();
 }
 
 
