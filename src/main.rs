@@ -8,7 +8,7 @@ use termion::raw::IntoRawMode;
 fn main() {
     let mut stdout = stdout().into_raw_mode().unwrap();
     let stdin = stdin();
-    let start_row = 3;
+    let start_row = 1;
     let mut cursor_x = 1;
     let mut cursor_y = start_row;
     let mut buffer: String = "".to_owned();
@@ -19,7 +19,12 @@ fn main() {
     print_prompt(&mut stdout, prompt.as_str());
 
     for k in stdin.keys() {
-        write!(stdout, "{}", termion::cursor::Goto(cursor_x, cursor_y)).unwrap();
+        write!(stdout,
+            "{}{}",
+            termion::color::Bg(color::LightWhite),
+            termion::cursor::Goto(cursor_x, cursor_y)
+        )
+        .unwrap();
 
         // Count mistypes
         if *k.as_ref().unwrap() != Key::Char(prompt.nth(0).unwrap()) {
@@ -60,24 +65,16 @@ fn main() {
             break;
         }
 
-        // Increment cursor but stop on second line
-        if cursor_x > 80 && cursor_y < start_row + 1 {
-            cursor_x = 1;
-            cursor_y += 1;
-        } else if cursor_x > 80 {
-            cursor_x = 1;
-        } else {
-            cursor_x += 1;
-        }
-
+        cursor_x += 1;
 
         stdout.flush().unwrap();
     }
 
     write!(
         stdout,
-        "{}{}",
+        "{}{}{}",
         termion::color::Fg(color::Reset),
+        termion::color::Bg(color::Reset),
         termion::cursor::Show
     )
     .unwrap();
