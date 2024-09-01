@@ -8,28 +8,33 @@ use termion::raw::IntoRawMode;
 fn main() {
     let mut stdout = stdout().into_raw_mode().unwrap();
     let stdin = stdin();
-    let start_row = 1;
     let mut cursor_x = 1;
-    let mut cursor_y = start_row;
     let mut buffer: String = "".to_owned();
     let mut prompt = "kitty type".chars();
     let prompt_len = prompt.as_str().len();
-    let mut misses = 0;
+    let mut mistakes = 0;
 
     print_prompt(&mut stdout, prompt.as_str());
 
     for k in stdin.keys() {
+        let current_key = prompt.nth(0).unwrap();
         write!(stdout,
             "{}{}",
             termion::color::Bg(color::LightWhite),
-            termion::cursor::Goto(cursor_x, cursor_y)
+            termion::cursor::Goto(cursor_x, 1)
         )
         .unwrap();
 
-        // Count mistypes
-        if *k.as_ref().unwrap() != Key::Char(prompt.nth(0).unwrap()) {
-            write!(stdout, "{}", termion::color::Fg(color::Red)).unwrap();
-            misses += 1;
+        // Count mistakes
+        if *k.as_ref().unwrap() != Key::Char(current_key) {
+            write!(stdout, 
+                "{}{}{}", 
+                termion::color::Fg(color::Red), 
+                termion::cursor::Goto(cursor_x, 1),
+                current_key.to_string()
+            )
+            .unwrap();
+            mistakes += 1;
         } else {
             write!(stdout, "{}", termion::color::Fg(color::Black)).unwrap();
         }
@@ -52,16 +57,7 @@ fn main() {
         
         // End condition
         if buffer.len() == prompt_len {
-            write!(
-                stdout,
-                "{}{}{}{}",
-                termion::cursor::Goto(1, cursor_y+1),
-                "You done, mistakes: ",
-                misses.to_string(),
-                termion::cursor::Goto(1, cursor_y+2)
-            )
-            .unwrap();
-            stdout.flush().unwrap();
+            complete_test(&mut stdout, mistakes as f32, prompt_len as f32);
             break;
         }
 
@@ -81,6 +77,25 @@ fn main() {
 }
 
 
+// Print completion and compute accuracy
+fn complete_test(stdout: &mut std::io::Stdout, mistakes: f32, prompt_len: f32) {
+    let accuracy = 100.0*((prompt_len - mistakes)/prompt_len);
+    write!(
+        stdout,
+        "{}{}{}{}{}{}{}",
+        termion::cursor::Goto(1, 3),
+        termion::color::Fg(color::Blue),
+        termion::color::Bg(color::Reset),
+        "You done, accuracy: ", 
+        accuracy.to_string(),
+        "%", 
+        termion::cursor::Goto(1, 4)
+    )
+    .unwrap();
+    stdout.flush().unwrap();
+}
+
+
 fn print_prompt(stdout: &mut std::io::Stdout, prompt: &str) {
     write!(
         stdout,
@@ -93,3 +108,4 @@ fn print_prompt(stdout: &mut std::io::Stdout, prompt: &str) {
     .unwrap();
     stdout.flush().unwrap();
 }
+
