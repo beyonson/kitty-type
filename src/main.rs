@@ -29,20 +29,24 @@ fn main() {
         if *k.as_ref().unwrap() != Key::Char(current_key) {
             write!(stdout, 
                 "{}{}{}", 
-                termion::color::Fg(color::Red), 
+                termion::color::Bg(color::LightRed), 
                 termion::cursor::Goto(cursor_x, 1),
                 current_key.to_string()
             )
             .unwrap();
             mistakes += 1;
         } else {
-            write!(stdout, "{}", termion::color::Fg(color::Black)).unwrap();
+            write!(stdout, 
+                "{}{}", 
+                termion::cursor::Goto(cursor_x, 1),
+                current_key.to_string()
+            )
+            .unwrap();
         }
 
         match k.as_ref().unwrap() {
             Key::Char('q') => break,
             Key::Char('-') => println!("{buffer}"),
-            Key::Char(c) => println!("{}", c),
             Key::Alt(c) => println!("^{}", c),
             Key::Ctrl(c) => println!("*{}", c),
             Key::Backspace => println!("×"),
@@ -62,7 +66,6 @@ fn main() {
         }
 
         cursor_x += 1;
-
         stdout.flush().unwrap();
     }
 
