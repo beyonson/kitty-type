@@ -3,15 +3,22 @@ use termion::event::Key;
 use termion::input::TermRead;
 use termion::color;
 use termion::raw::IntoRawMode;
+use random_word::Lang;
+use rand::Rng;
 
 fn main() {
+    // Stdio
     let mut stdout = stdout().into_raw_mode().unwrap();
     let stdin = stdin();
-    // cursor x array: current position, max position
-    let mut cursor_x = [1, 1];
+
+    // Iterators
+    let mut cursor_x = 1;
     let mut prompt_pos = 0;
+
+    // Game data
     let mut buffer: String = "".to_owned();
-    let mut prompt = "kitty type".chars();
+    let mut prompt_string = generate_prompt();
+    let mut prompt = prompt_string.chars();
     let prompt_len = prompt.as_str().len();
     let mut mistakes = 0;
     let mut retracking = false;
@@ -32,7 +39,7 @@ fn main() {
             write!(stdout, 
                 "{}{}{}", 
                 termion::color::Bg(color::LightRed), 
-                termion::cursor::Goto(cursor_x[0], 1),
+                termion::cursor::Goto(cursor_x, 1),
                 current_key.to_string()
             )
             .unwrap();
@@ -41,7 +48,7 @@ fn main() {
         } else {
             write!(stdout, 
                 "{}{}", 
-                termion::cursor::Goto(cursor_x[0], 1),
+                termion::cursor::Goto(cursor_x, 1),
                 current_key.to_string()
             )
             .unwrap();
@@ -60,22 +67,22 @@ fn main() {
         }
         
         // End condition
-        if buffer.len() == prompt_len {
+        if prompt_pos == prompt_len - 1 {
             complete_test(&mut stdout, mistakes as f32, prompt_len as f32);
             break;
         }
 
         if !retracking {
-            cursor_x[0] += 1;
+            cursor_x += 1;
             prompt_pos += 1;
         } else {
-            cursor_x[0] -= 1;
+            cursor_x -= 1;
             prompt_pos -= 1;
         }
 
         write!(stdout,
             "{}",
-            termion::cursor::Goto(cursor_x[0], 1)
+            termion::cursor::Goto(cursor_x, 1)
         )
         .unwrap();
 
@@ -123,6 +130,21 @@ fn print_prompt(stdout: &mut std::io::Stdout, prompt: &str) {
     )
     .unwrap();
     stdout.flush().unwrap();
+}
+
+
+fn generate_prompt() -> String {
+    let mut prompt: String = "".to_owned();
+    
+    for i in 0..10 {
+        let rand_int = rand::thread_rng().gen_range(3..6);
+        prompt.push_str(random_word::gen_len(rand_int, Lang::En).unwrap());
+        if i != 9 {
+        prompt.push_str(" ");
+        }
+    }
+    
+    prompt
 }
 
 
