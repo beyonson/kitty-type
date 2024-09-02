@@ -1,4 +1,5 @@
 use std::io::{stdin, stdout, Write};
+use std::time::SystemTime;
 use termion::event::Key;
 use termion::input::TermRead;
 use termion::color;
@@ -6,8 +7,7 @@ use termion::raw::IntoRawMode;
 use random_word::Lang;
 use rand::Rng;
 
-fn main() {
-    // Stdio
+fn main() { // Stdio
     let mut stdout = stdout().into_raw_mode().unwrap();
     let stdin = stdin();
 
@@ -24,6 +24,7 @@ fn main() {
     let mut retracking = false;
 
     print_prompt(&mut stdout, prompt.as_str());
+    let now = SystemTime::now();
     let prompt_vec = create_char_vec(&mut prompt);
 
     for k in stdin.keys() {
@@ -68,7 +69,15 @@ fn main() {
         
         // End condition
         if prompt_pos == prompt_len - 1 {
-            complete_test(&mut stdout, mistakes as f32, prompt_len as f32);
+            match now.elapsed() {
+                Ok(elapsed) => {
+                    let elapsed_time = elapsed.as_secs();
+                    complete_test(&mut stdout, elapsed_time as f32, mistakes as f32, prompt_len as f32);
+                }
+                Err(e) => {
+                    println!("Error: {e:?}");
+                }
+            }
             break;
         }
 
@@ -101,18 +110,27 @@ fn main() {
 
 
 // Print completion and compute accuracy
-fn complete_test(stdout: &mut std::io::Stdout, mistakes: f32, prompt_len: f32) {
+fn complete_test(stdout: &mut std::io::Stdout, elapsed_time: f32, mistakes: f32, prompt_len: f32) {
     let accuracy = 100.0*((prompt_len - mistakes)/prompt_len);
+    let wpm = prompt_len/5.0*(60.0/elapsed_time);
     write!(
         stdout,
-        "{}{}{}{}{}{}{}",
+        "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
         termion::cursor::Goto(1, 3),
         termion::color::Fg(color::Blue),
         termion::color::Bg(color::Reset),
-        "You done, accuracy: ", 
+        "Accuracy: ", 
         accuracy.to_string(),
         "%", 
-        termion::cursor::Goto(1, 4)
+        " WPM: ",
+        wpm.to_string(),
+        termion::cursor::Goto(1, 5),
+        "      /^^\\",
+        termion::cursor::Goto(1, 6),
+        "    __\\`-`",
+        termion::cursor::Goto(1, 7),
+        "_--/  , )," ,
+        termion::cursor::Goto(1, 8)
     )
     .unwrap();
     stdout.flush().unwrap();
