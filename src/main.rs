@@ -115,7 +115,7 @@ fn complete_test(stdout: &mut std::io::Stdout, elapsed_time: f32, mistakes: f32,
     let wpm = prompt_len/5.0*(60.0/elapsed_time);
     write!(
         stdout,
-        "{}{}{}{}{}{}{}{}{}",
+        "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
         termion::cursor::Goto(1, 3),
         termion::color::Fg(color::Blue),
         termion::color::Bg(color::Reset),
@@ -124,7 +124,13 @@ fn complete_test(stdout: &mut std::io::Stdout, elapsed_time: f32, mistakes: f32,
         "%", 
         " WPM: ",
         wpm.to_string(),
-        termion::cursor::Goto(1, 4)
+        termion::cursor::Goto(1, 5),
+        "      /^^\\",
+        termion::cursor::Goto(1, 6),
+        "    __\\`-`",
+        termion::cursor::Goto(1, 7),
+        "_--/  , )," ,
+        termion::cursor::Goto(1, 8)
     )
     .unwrap();
     stdout.flush().unwrap();
