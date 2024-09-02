@@ -17,9 +17,9 @@ fn main() { // Stdio
 
     // Game data
     let mut buffer: String = "".to_owned();
-    let mut prompt_string = generate_prompt();
+    let prompt_string = generate_prompt();
     let mut prompt = prompt_string.chars();
-    let prompt_len = prompt.as_str().len();
+    let prompt_len = prompt_string.len();
     let mut mistakes = 0;
     let mut retracking = false;
 
