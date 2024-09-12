@@ -12,8 +12,7 @@ fn main() { // Stdio
     let stdin = stdin();
 
     // Iterators
-    let mut cursor_x = 1;
-    let mut prompt_pos = 0;
+    let mut cursor_x: u16 = 0;
 
     // Game data
     let mut buffer: String = "".to_owned();
@@ -28,7 +27,7 @@ fn main() { // Stdio
     let prompt_vec = create_char_vec(&mut prompt);
 
     for k in stdin.keys() {
-        let current_key = prompt_vec[prompt_pos];
+        let current_key = prompt_vec[usize::from(cursor_x)];
         if *k.as_ref().unwrap() == Key::Backspace {
             write!(stdout, 
                 "{}", 
@@ -40,7 +39,7 @@ fn main() { // Stdio
             write!(stdout, 
                 "{}{}{}", 
                 termion::color::Bg(color::LightRed), 
-                termion::cursor::Goto(cursor_x, 1),
+                termion::cursor::Goto(cursor_x+1, 1),
                 current_key.to_string()
             )
             .unwrap();
@@ -48,8 +47,9 @@ fn main() { // Stdio
             retracking = false;
         } else {
             write!(stdout, 
-                "{}{}", 
-                termion::cursor::Goto(cursor_x, 1),
+                "{}{}{}", 
+                termion::color::Bg(color::Reset), 
+                termion::cursor::Goto(cursor_x+1, 1),
                 current_key.to_string()
             )
             .unwrap();
@@ -57,7 +57,7 @@ fn main() { // Stdio
         }
 
         match k.as_ref().unwrap() {
-            Key::Esc => break,
+            Key::Ctrl(_c) => break,
             _ => {}
         }
 
@@ -68,7 +68,7 @@ fn main() { // Stdio
         }
         
         // End condition
-        if prompt_pos == prompt_len - 1 {
+        if usize::from(cursor_x) == prompt_len - 1 {
             match now.elapsed() {
                 Ok(elapsed) => {
                     let elapsed_time = elapsed.as_secs();
@@ -83,15 +83,13 @@ fn main() { // Stdio
 
         if !retracking {
             cursor_x += 1;
-            prompt_pos += 1;
         } else {
             cursor_x -= 1;
-            prompt_pos -= 1;
         }
 
         write!(stdout,
             "{}",
-            termion::cursor::Goto(cursor_x, 1)
+            termion::cursor::Goto(cursor_x+1, 1)
         )
         .unwrap();
 
@@ -112,7 +110,7 @@ fn main() { // Stdio
 // Print completion and compute accuracy
 fn complete_test(stdout: &mut std::io::Stdout, elapsed_time: f32, mistakes: f32, prompt_len: f32) {
     let accuracy = 100.0*((prompt_len - mistakes)/prompt_len);
-    let wpm = prompt_len/5.0*(60.0/elapsed_time);
+    let wpm = prompt_len/5.0*(60.0/elapsed_time)*accuracy/100.0;
     write!(
         stdout,
         "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
