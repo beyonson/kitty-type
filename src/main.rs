@@ -110,7 +110,7 @@ fn main() { // Stdio
 // Print completion and compute accuracy
 fn complete_test(stdout: &mut std::io::Stdout, elapsed_time: f32, mistakes: f32, prompt_len: f32) {
     let accuracy = 100.0*((prompt_len - mistakes)/prompt_len);
-    let wpm = prompt_len/5.0*(60.0/elapsed_time);
+    let wpm = prompt_len/5.0*(60.0/elapsed_time)*accuracy/100.0;
     write!(
         stdout,
         "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
