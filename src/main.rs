@@ -83,7 +83,7 @@ fn main() { // Stdio
 
         if !retracking {
             cursor_x += 1;
-        } else {
+        } else if retracking && cursor_x > 0 {
             cursor_x -= 1;
         }
 
